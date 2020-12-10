@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.inc": "c",
+			"random": "c",
+			"sockets.h": "c",
+			"*.ipp": "c",
+			"memory": "c",
+			"future": "c",
+			"optional": "c",
+			"array": "c",
+			"string": "c",
+			"string_view": "c",
+			"uart.h": "c",
+			"esp_flash_partitions.h": "c",
+			"esp_http_client.h": "c",
+			"esp_ota_ops.h": "c",
+			"esp_partition.h": "c"
+		}
+	}
+}
