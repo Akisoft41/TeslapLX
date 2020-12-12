@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "esp_flash_partitions.h"
 #include "esp_http_client.h"
 #include "esp_log.h"
@@ -133,7 +135,7 @@ bool ota_update(const char* url)
             }
             binary_file_length += data_read;
             // printf("Written image length %d", binary_file_length);
-            if ((binary_file_length & 0xffff) == 0) printf(" %08x\r", binary_file_length);
+            if ((binary_file_length & 0x3fff) == 0) printf(" %08x\r", binary_file_length); 
             fflush(stdout);
         }
         else if (data_read == 0) {
@@ -176,7 +178,11 @@ bool ota_update(const char* url)
         free(ota_write_data);
         return false;
     }
-    printf("Prepare to restart system!\n");
+    printf("Prepare to restart system\n");
+    fflush(stdout);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    printf("Restart!\n");
+    fflush(stdout);
     esp_restart();
     return true;
 }

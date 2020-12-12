@@ -69,12 +69,6 @@ static wifi_cb_t wifi_cb = NULL;
 static TaskHandle_t wifi_tcp_server_handle = NULL;
 static int wifi_tcp_server_listen_sock = -1;
 
-// tcp stat
-static uint32_t tcp_size;
-static uint32_t tcp_stat_us;
-static uint32_t tcp_last_us;
-
-
 
 // -----------------------------  tcp cookie io functions  -----------------------------
 
@@ -96,26 +90,20 @@ ssize_t _tcp_write(void *cookie, const char *buf, size_t size)
         }
         to_write -= written;
     }
-
-    // tcp global stat
-    tcp_last_us = esp_timer_get_time();
-    tcp_size += size;
-    uint32_t time_us = tcp_last_us - tcp_stat_us;
-    if (time_us >= 10 * 1000000) {
-        ESP_LOGI(TAG, "tcp stat: size=%uB %iB/s",
-                tcp_size, (int)((float)tcp_size / ((float)time_us / 1000000)));
-        tcp_size = 0;
-        tcp_stat_us = tcp_last_us;
-    }
-
     return size;
+}
+
+int _tcp_close(void *cookie)
+{
+    int soc = (int)cookie;
+    return close(soc);
 }
 
 static const cookie_io_functions_t tcp_cookie_func = {
     .read  = _tcp_read,
     .write = _tcp_write,
     .seek  = NULL,
-    .close = NULL
+    .close = _tcp_close
 };
 
 FILE *tcp_fopen(int sock, const char *mode)

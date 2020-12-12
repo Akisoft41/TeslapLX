@@ -1562,6 +1562,9 @@ void elm_do(const char* tag)
 
     // loop
     elm_reset(g);
+    elm_writeln(g, NULL);
+    printf("TeslapLX %s", TAG);
+    elm_writeln(g, NULL);
     elm_write_prompt(g);
 
     char line[ELM_BUFFER_LEN];
