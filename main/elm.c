@@ -41,11 +41,11 @@
 
 static const char* ELM_TAG = "elm";
 
-#define ELM_BUFFER_LEN 128
-#define ELM_ST_FILTER_LEN 100
-
 #define ELM_MONITOR_TASK_RUN_PRIO 8
 #define ELM_MONITOR_TASK_RUN_CORE 0 // tskNO_AFFINITY
+
+#define ELM_BUFFER_LEN 128
+#define ELM_ST_FILTER_LEN 100
 
 typedef struct {
     uint32_t pattern;
@@ -1527,6 +1527,7 @@ void elm_monitor_start(elm_globals_t* g)
     ESP_LOGI(TAG, "Start monitor");
 
     G.elm_monitor = true;
+    fflush(stdin);
     xTaskCreatePinnedToCore(elm_monitor_task, "elm-monitor", 4 * 1024, g, ELM_MONITOR_TASK_RUN_PRIO, NULL, ELM_MONITOR_TASK_RUN_CORE);
 }
 
@@ -1545,23 +1546,39 @@ void elm_monitor_stop(elm_globals_t* g)
     fflush(G.elm_monitor_out);
 }
 
+// -----------------------------  elm_globals_  -----------------------------
+
+elm_globals_t* elm_globals_init(const char* tag)
+{
+    elm_globals_t* g;
+    g = malloc(sizeof(*g));
+    if (g == NULL) {
+        ESP_LOGE(ELM_TAG, "no mem for globals");
+        return NULL;
+    }
+    memset(g, 0, sizeof(*g));
+    G.elm_tag = tag;
+    G.elm_monitor_out = stdout;
+    elm_reset(g);
+    return g;
+}
+
+void elm_globals_deinit(elm_globals_t* g)
+{
+    elm_monitor_stop(g);
+    free(G.elm_device_identifier);
+    free(g);
+}
+
 // -----------------------------  elm_do  -----------------------------
 
 void elm_do(const char* tag)
 {
     // init
-    elm_globals_t* g;
-    g = malloc(sizeof(*g));
-    if (g == NULL) {
-        ESP_LOGE(ELM_TAG, "no mem for globals");
-        return;
-    }
-    memset(g, 0, sizeof(*g));
-    G.elm_tag = tag;
-    G.elm_monitor_out = stdout;
+    elm_globals_t* g = elm_globals_init(tag);
+    if (g == NULL) return;
 
     // loop
-    elm_reset(g);
     elm_writeln(g, NULL);
     printf("TeslapLX %s", TAG);
     elm_writeln(g, NULL);
@@ -1572,6 +1589,7 @@ void elm_do(const char* tag)
     while (true) {
         int c = fgetc(stdin);
         if (c == 0) continue;
+        if (c == '\n') continue; // do not stop monitor
         if (c < 0) {
             ESP_LOGW(TAG, "stop on EOF");
             break;
@@ -1625,7 +1643,5 @@ void elm_do(const char* tag)
     }
 
     // deinit
-    elm_monitor_stop(g);
-    free(G.elm_device_identifier);
-    free(g);
+    elm_globals_deinit(g);
 }

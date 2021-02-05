@@ -20,7 +20,11 @@
 			"esp_flash_partitions.h": "c",
 			"esp_http_client.h": "c",
 			"esp_ota_ops.h": "c",
-			"esp_partition.h": "c"
-		}
+			"esp_partition.h": "c",
+			"chrono": "c",
+			"algorithm": "c"
+		},
+		"idf.portWin": "COM5",
+		"idf.flashType": "UART"
 	}
 }

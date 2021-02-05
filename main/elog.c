@@ -26,7 +26,7 @@
 static const char* TAG = "elog";
 
 static FILE* _elog_stdout = NULL;
-static esp_log_level_t _elog_level;
+// static esp_log_level_t _elog_level;
 
 esp_err_t esp_wifi_internal_set_log_level(int level);
 esp_err_t esp_wifi_internal_set_log_mod(int module, uint32_t submodule, bool enable);
@@ -46,8 +46,9 @@ void elog_level_set(const char* tag, esp_log_level_t level)
     if (tag == NULL || *tag == 0) tag = "*";
     ESP_LOGI(TAG, "set log level %i for tag '%s'", level, tag);
     esp_log_level_set(tag, level);
-    if (strcmp(tag, "*") == 0) {
-        _elog_level = level;
+    if (strcmp(tag, "*") == 0 || strcmp(tag, "wifi") == 0) {
+        // _elog_level = level;
+        if (level > 0) level--;
         esp_wifi_internal_set_log_level(level);
     }
 }

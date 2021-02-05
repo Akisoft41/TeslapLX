@@ -38,6 +38,7 @@
 #include "sdkconfig.h"
 
 #include "wifi.h"
+#include "httpd.h"
 
 static const char* TAG = "net";
 
@@ -201,6 +202,8 @@ void _wifi_servers_start()
     }
 
     xTaskCreatePinnedToCore(wifi_tcp_server_task, "tcp_server", 4096, NULL, WIFI_TCP_TASK_PRIO, &wifi_tcp_server_handle, WIFI_TCP_TASK_CORE);
+
+    net_httpd_start();
 }
 
 void _wifi_servers_stop()
@@ -214,6 +217,8 @@ void _wifi_servers_stop()
         vTaskDelete(wifi_tcp_server_handle);
         wifi_tcp_server_handle = NULL;
     }
+
+    net_httpd_stop();
 }
 
 // -----------------------------  wifi_handler  -----------------------------

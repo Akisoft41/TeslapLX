@@ -232,7 +232,8 @@ size_t bt_read(uint32_t handle, void* buf, size_t count, TickType_t ticksToWait)
 
     size_t size = 0;
     uint8_t* data = xRingbufferReceiveUpTo(spp_rx_buffer, &size, ticksToWait, count);
-    if (data == NULL || size == 0 || size > count) return 0;
+    if (data == NULL || size == 0) return 0;
+    if (size > count) size = count;
 
     memcpy(buf, data, size);
     vRingbufferReturnItem(spp_rx_buffer, data);

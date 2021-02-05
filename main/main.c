@@ -37,6 +37,7 @@
 #include "can.h"
 #include "elm.h"
 #include "wifi.h"
+#include "httpd.h"
 
 static const char* TAG = "TeslapLX";
 
@@ -96,8 +97,41 @@ void tcp_open_cb(int soc)
 {
     ESP_LOGI(TAG, "tcp start socket=%u", soc);
     tcp_task((void*)soc);
+    //CONFIG_ESP32_WIFI_TASK_PINNED_TO_CORE_0
+    // xTaskCreatePinnedToCore(bt_task, "elm-bt", 8 * 1024, (void*)soc, 5, NULL, 0);
 }
 
+
+// -----------------------------  ws  -----------------------------
+
+void ws_task(void* param)
+{
+    int fd = (int)param;
+    ESP_LOGI(TAG, "ws task started fd=%u", fd);
+
+    stdin  = net_httpd_ws_fopen(fd, "r");
+    stdout = net_httpd_ws_fopen(fd, "w");
+
+    setvbuf(stdin, NULL, _IONBF, 0);
+
+    elm_do("elm-ws");
+
+    ESP_LOGI(TAG, "ws task ended fd=%u", fd);
+    fclose(stdin);
+    fclose(stdout);
+    vTaskDelete(NULL);
+}
+
+void ws_open_cb(int fd)
+{
+    ESP_LOGI(TAG, "ws start handle=%u", fd);
+    xTaskCreatePinnedToCore(ws_task, "elm-ws", 8 * 1024, (void*)fd, 5, NULL, 0);
+}
+
+void ws_close_cb(int fd)
+{
+    ESP_LOGI(TAG, "ws stop handle=%u", fd);
+}
 
 // -----------------------------  uart  -----------------------------
 
@@ -129,6 +163,8 @@ void uart_start(uart_port_t port)
     ESP_LOGI(TAG, "uart start port=%u", port);
     uart_task((void*)port);
 }
+
+
 // -----------------------------  app_main  -----------------------------
 
 void app_main()
@@ -149,6 +185,8 @@ void app_main()
     bt_init(bt_open_cb, bt_close_cb);
 
     wifi_init(tcp_open_cb);
+
+    net_httpd_ws_init(ws_open_cb, ws_close_cb);
 
     // serial elm
     while (true) {
